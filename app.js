@@ -52,11 +52,41 @@ app.get("/listing",async(req,res)=>{
    res.render("listings/index.ejs",{allListings});
 })
 
+// New route
+app.get("/listings/new",async(req,res)=>{
+    res.render("listings/new.ejs")
+})
+
+//Create route
+
+app.post("/listings",async(req,res)=>{
+    let {title, description,image,price,location,country} = req.body;
+
+    let newlisting =  new Listing({
+             title:title,
+             description:description,
+             image:image,
+             price:price,
+             location:location,
+             country:country
+      });
+
+      res.redirect("/listing")
+
+      newlisting.save().then((res)=>{
+        console.log(res);
+        
+      })
+})
+
+
+// show route
 app.get("/listings/:id",async(req,res)=>{
     let {id} = req.params;
   const listing =   await Listing.findById(id);
   res.render("listings/show.ejs",{listing})
 })
+
 
 
 app.listen(port,()=>{
