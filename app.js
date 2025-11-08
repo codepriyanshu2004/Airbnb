@@ -1,6 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const Listening = require("./models/listing.js")
+const Listing = require("./models/listing.js")
 const path = require("path");
 
 const app= express()
@@ -27,7 +27,7 @@ app.get("/",(req,res)=>{
 
 // app.get("/testListing", async(req,res)=>{
 
-//     let sampleListting = new Listening({
+//     let sampleListting = new Listing({
 //         title: "My New Villa",
 //         description:"By the beach",    // for tesing only
 //         price:1200,
@@ -44,11 +44,18 @@ app.get("/",(req,res)=>{
 
 
 app.set("view engine","ejs");
+app.use(express.urlencoded({extended : true}))
 
 
 app.get("/listing",async(req,res)=>{
-   const allListings = await Listening.find({});
+   const allListings = await Listing.find({});
    res.render("listings/index.ejs",{allListings});
+})
+
+app.get("/listings/:id",async(req,res)=>{
+    let {id} = req.params;
+  const listing =   await Listing.findById(id);
+  res.render("listings/show.ejs",{listing})
 })
 
 
