@@ -2,7 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Listing = require("./models/listing.js")
 const path = require("path");
-const methodOverride = require("method-override")
+const methodOverride = require("method-override");
+const engine = require('ejs-mate');
 
 const app= express()
 let port = 8080;
@@ -45,8 +46,12 @@ app.get("/",(req,res)=>{
 
 
 app.set("view engine","ejs");
+app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({extended : true}));
 app.use(methodOverride("_method"));
+app.engine('ejs', engine);
+app.use(express.static(path.join(__dirname,"public")));
+
 
 
 app.get("/listing",async(req,res)=>{
@@ -107,7 +112,7 @@ app.put("/listings/:id",async(req,res)=>{
  console.log(data);
  
 
-     res.redirect("/listing")
+     res.redirect(`/listings/${id}`)
 
 });
 
