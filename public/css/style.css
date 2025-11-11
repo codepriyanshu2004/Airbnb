@@ -72,8 +72,16 @@ body {
  }
 
  .add-btn{
-    border: none;
+    border: none !important;
     margin-top: 6px;
+    background-color: #fe424d !important;
  }
 
+
+ /* //Edit page */
+ .edit-btn{
+     border: none !important;
+    margin-top: 6px;
+    background-color: #fe424d !important;
+ }
 
