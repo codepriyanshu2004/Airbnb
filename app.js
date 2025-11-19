@@ -4,6 +4,8 @@ const Listing = require("./models/listing.js")
 const path = require("path");
 const methodOverride = require("method-override");
 const engine = require('ejs-mate');
+const wrapAsync = require("./utils/wrapAsync.js");
+const ExpressError = require("./utils/ExpressError.js")
 
 const app= express()
 let port = 8080;
@@ -53,58 +55,73 @@ app.engine('ejs', engine);
 app.use(express.static(path.join(__dirname,"public")));
 
 
+//Index route
 
-app.get("/listing",async(req,res)=>{
+app.get("/listing",wrapAsync(async(req,res)=>{
    const allListings = await Listing.find({});
    res.render("listings/index.ejs",{allListings});
-})
+}));
 
 // New route
+
 app.get("/listings/new",async(req,res)=>{
     res.render("listings/new.ejs")
 })
 
 //Create route
 
-app.post("/listings",async(req,res)=>{
-    let {title, description,image,price,location,country} = req.body;
+app.post("/listings",wrapAsync(async(req,res,next)=>{
 
-    let newlisting =  new Listing({
-             title:title,
-             description:description,
-             image:image,
-             price:price,
-             location:location,
-             country:country
-      });
+    
+    // let {title, description,image,price,location,country} = req.body;
 
-      res.redirect("/listing")
+    // let newlisting =  new Listing({
+    //          title:title,
+    //          description:description,
+    //          image:image,
+    //          price:price,
+    //          location:location,
+    //          country:country
+    //   });
+
+
+    if(!req.body.listing){
+        throw new ExpressError(400,"send valid data for listing");
+    }
+
+      const newlisting = new Listing(req.body.listing);
+   
+
 
       newlisting.save().then((res)=>{
         console.log(res);
         
       })
+       res.redirect("/listing")
 })
+);
 
 
 // show route
-app.get("/listings/:id",async(req,res)=>{
+
+app.get("/listings/:id",wrapAsync(async(req,res,next)=>{
     let {id} = req.params;
   const listing =   await Listing.findById(id);
   res.render("listings/show.ejs",{listing})
 })
+);
 
 //edit route
 
-app.get("/listings/:id/edit",async(req,res)=>{
+app.get("/listings/:id/edit",wrapAsync(async(req,res)=>{
        let {id} = req.params;
 
     let listing= await Listing.findById(id)
     res.render("listings/edit.ejs",{listing})
-});
+}));
 
 //update route
-app.put("/listings/:id",async(req,res)=>{
+app.put("/listings/:id",wrapAsync(async(req,res)=>{
     let {id} = req.params;
 
 
@@ -114,17 +131,28 @@ app.put("/listings/:id",async(req,res)=>{
 
      res.redirect(`/listings/${id}`)
 
-});
+}));
 
-app.delete("/listings/:id/delete",async(req,res)=>{
+app.delete("/listings/:id/delete",wrapAsync(async(req,res)=>{
     let {id} = req.params;
     
    let deleteList= await Listing.findByIdAndDelete(id);
    console.log(deleteList);
    
   res.redirect("/listing")
-})
+}));
 
+
+app.all(/(.*)/, (req, res, next) => {
+    next(new ExpressError(404, "Page Not Found"));
+});
+
+
+app.use((err,req,res,next)=>{
+   let {statusCode=500 , message="something is wrong"} = err;
+//    res.status(statusCode).send(message);
+  res.status(statusCode).render("listings/error.ejs",{message})
+})
 
 
 app.listen(port,()=>{
