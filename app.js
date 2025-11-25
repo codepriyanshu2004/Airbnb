@@ -5,7 +5,8 @@ const path = require("path");
 const methodOverride = require("method-override");
 const engine = require('ejs-mate');
 const wrapAsync = require("./utils/wrapAsync.js");
-const ExpressError = require("./utils/ExpressError.js")
+const ExpressError = require("./utils/ExpressError.js");
+const Reviews = require("./models/review.js")
 
 const app= express()
 let port = 8080;
@@ -16,6 +17,7 @@ async function main(params) {
 
     
 }
+
 
 main()
 .then(()=>{
@@ -89,8 +91,26 @@ app.post("/listings",wrapAsync(async(req,res,next)=>{
         throw new ExpressError(400,"send valid data for listing");
     }
 
+
+
       const newlisting = new Listing(req.body.listing);
-   
+     
+
+       if(!newlisting.title){
+          throw new ExpressError(400,"title is missing")
+      }
+
+      if(!newlisting.description){
+          throw new ExpressError(400,"Description is missing")
+      }
+
+       if(!newlisting.location){
+          throw new ExpressError(400,"location is missing")
+      }
+
+       if(!newlisting.country){
+          throw new ExpressError(400,"country is missing")
+      }
 
 
       newlisting.save().then((res)=>{
@@ -106,7 +126,7 @@ app.post("/listings",wrapAsync(async(req,res,next)=>{
 
 app.get("/listings/:id",wrapAsync(async(req,res,next)=>{
     let {id} = req.params;
-  const listing =   await Listing.findById(id);
+  const listing =   await Listing.findById(id).populate("reviews");
   res.render("listings/show.ejs",{listing})
 })
 );
@@ -114,7 +134,7 @@ app.get("/listings/:id",wrapAsync(async(req,res,next)=>{
 //edit route
 
 app.get("/listings/:id/edit",wrapAsync(async(req,res)=>{
-       let {id} = req.params;
+    let {id} = req.params;
 
     let listing= await Listing.findById(id)
     res.render("listings/edit.ejs",{listing})
@@ -123,15 +143,20 @@ app.get("/listings/:id/edit",wrapAsync(async(req,res)=>{
 //update route
 app.put("/listings/:id",wrapAsync(async(req,res)=>{
     let {id} = req.params;
+  
+       if(!req.body.listing){
+        throw new ExpressError(400,"send valid data for listing");
+    }
 
-
- let data= await Listing.findByIdAndUpdate(id,{...req.body.listing});
- console.log(data);
+      let data= await Listing.findByIdAndUpdate(id,{...req.body.listing});
+       console.log(data);
  
 
      res.redirect(`/listings/${id}`)
 
 }));
+
+//Delete route
 
 app.delete("/listings/:id/delete",wrapAsync(async(req,res)=>{
     let {id} = req.params;
@@ -142,6 +167,52 @@ app.delete("/listings/:id/delete",wrapAsync(async(req,res)=>{
   res.redirect("/listing")
 }));
 
+//Reviews
+//Post Route
+
+app.post("/listings/:id/reviews",wrapAsync(async(req,res)=>{
+ 
+    let listing = await Listing.findById(req.params.id);
+
+      if(!req.body.review){
+        throw new ExpressError(400,"send valid data for review");
+    }
+
+    let newReview = new Reviews(req.body.review);
+
+    if (!newReview.rating) {
+        
+          throw new ExpressError(400,"send valid data for rating");
+    }
+   
+     if (!newReview.comment) {
+        
+          throw new ExpressError(400,"send valid data for comment");
+    }
+
+
+
+    listing.reviews.push(newReview);
+
+    newReview.save();
+    listing.save();
+    
+    res.redirect(`/listings/${listing._id}`)
+})
+
+);
+
+app.delete("/listings/:id/reviews/:reviewId", wrapAsync(async (req, res) => {
+    let { id, reviewId } = req.params;
+
+    // Remove review reference from listing model
+    await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+
+    // Delete the review itself from review model
+    await Reviews.findByIdAndDelete(reviewId);
+
+    res.redirect(`/listings/${id}`);
+}));
 
 app.all(/(.*)/, (req, res, next) => {
     next(new ExpressError(404, "Page Not Found"));
@@ -149,9 +220,9 @@ app.all(/(.*)/, (req, res, next) => {
 
 
 app.use((err,req,res,next)=>{
-   let {statusCode=500 , message="something is wrong"} = err;
+   let {status=500 , message="something is wrong"} = err;
 //    res.status(statusCode).send(message);
-  res.status(statusCode).render("listings/error.ejs",{message})
+  res.status(status).render("listings/error.ejs",{message})
 })
 
 
