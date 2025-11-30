@@ -6,7 +6,9 @@ const methodOverride = require("method-override");
 const engine = require('ejs-mate');
 const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
-const Reviews = require("./models/review.js")
+const Reviews = require("./models/review.js");
+const session = require("express-session");
+const flash = require("connect-flash")
 
 const listings = require("./routes/listing.js")
 const review = require("./routes/review.js")
@@ -60,6 +62,26 @@ app.use(methodOverride("_method"));
 app.engine('ejs', engine);
 app.use(express.static(path.join(__dirname,"public")));
 
+
+const sessionOptionsS ={
+    secret:"mysuperstring",
+    resave:false,
+    saveUninitialized:true,
+    cookie:{
+        expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly:true
+    }
+}
+
+app.use(session(sessionOptionsS));
+app.use(flash());
+
+  app.use((req,res,next)=>{
+    res.locals.successMsg = req.flash("success");
+      res.locals.errorMsg = req.flash("error");
+      next();
+  })
 
 
 app.use("/listings",listings);
