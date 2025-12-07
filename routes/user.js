@@ -16,9 +16,16 @@ router.post("/signup",wrapAsync(async(req,res)=>{
         const newUser = new User({email,username});
         const registerUser = await User.register(newUser,password);
         console.log(registerUser);
-        req.flash("success","Welcome to Airbnb");
+
+        req.login(registerUser,(err)=>{
+            if (err) {
+                return (err);
+            }
+         req.flash("success","Welcome to Airbnb");
         res.redirect("/listings")
         
+        })
+      
         
     } catch (e) {
         req.flash("error",e.message);
@@ -43,6 +50,17 @@ router.post(
     res.redirect("/listings");
   }
 );
+
+router.get("/logout",(req,res,next)=>{
+    req.logout((err)=>{
+        if(err){
+            return next(err);
+
+        }
+        req.flash("success","you are logged out!");
+        res.redirect("listings")
+    })
+})
 
 
 module.exports = router;
