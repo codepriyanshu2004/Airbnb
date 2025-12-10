@@ -24,7 +24,8 @@ router.get("/new",isLoggedIn,async(req,res)=>{
     // }
     
     res.render("listings/new.ejs")
-})
+});
+
 
 //Create route
 
@@ -50,7 +51,7 @@ router.post("/",wrapAsync(async(req,res,next)=>{
 
 
       const newlisting = new Listing(req.body.listing);
-     
+       newlisting.owner = req.user._id;
 
        if(!newlisting.title){
           throw new ExpressError(400,"title is missing")
@@ -84,13 +85,19 @@ router.post("/",wrapAsync(async(req,res,next)=>{
 
 router.get("/:id",wrapAsync(async(req,res,next)=>{
     let {id} = req.params;
-  const listing =   await Listing.findById(id).populate("reviews");
+  const listing =   await Listing.findById(id).populate("reviews").populate("owner")
   if(!listing){
       req.flash("error","Cureently not exits");
      return res.redirect("/listings")
   }
-  res.render("listings/show.ejs",{listing})
+
+  res.render("listings/show.ejs",{listing});
+    console.log(listing);
+    
 })
+
+
+
 );
 
 //edit route
@@ -101,6 +108,7 @@ router.get("/:id/edit",isLoggedIn,wrapAsync(async(req,res)=>{
     let listing= await Listing.findById(id)
     res.render("listings/edit.ejs",{listing})
 }));
+
 
 //update route
 router.put("/:id",isLoggedIn,wrapAsync(async(req,res)=>{
