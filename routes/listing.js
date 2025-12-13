@@ -3,7 +3,7 @@ const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync.js");
 const ExpressError = require("../utils/ExpressError.js");
 const Listing = require("../models/listing.js");
-const isLoggedIn = require("../middlware.js")
+const { isLoggedIn, isOwner } = require("../middlware.js");
 
 
 
@@ -29,7 +29,7 @@ router.get("/new",isLoggedIn,async(req,res)=>{
 
 //Create route
 
-router.post("/",wrapAsync(async(req,res,next)=>{
+router.post("/",isLoggedIn,wrapAsync(async(req,res,next)=>{
 
     
     // let {title, description,image,price,location,country} = req.body;
@@ -111,12 +111,18 @@ router.get("/:id/edit",isLoggedIn,wrapAsync(async(req,res)=>{
 
 
 //update route
-router.put("/:id",isLoggedIn,wrapAsync(async(req,res)=>{
+router.put("/:id",isOwner,isLoggedIn,wrapAsync(async(req,res)=>{
     let {id} = req.params;
   
        if(!req.body.listing){
         throw new ExpressError(400,"send valid data for listing");
     }
+
+    // let listing = await Listing.findById(id);
+    //  if(!listing.owner.equals(res.locals.currUser._id)){
+    //     req.flash("error","You are not a owner u dont have permission!");
+    //     return res.redirect(`/listings/${id}`);
+    //  }
 
       let data= await Listing.findByIdAndUpdate(id,{...req.body.listing});
        console.log(data);
@@ -128,9 +134,10 @@ router.put("/:id",isLoggedIn,wrapAsync(async(req,res)=>{
 
 //Delete route
 
-router.delete("/:id/delete",isLoggedIn,wrapAsync(async(req,res)=>{
+router.delete("/:id/delete",isOwner,isLoggedIn,wrapAsync(async(req,res)=>{
     let {id} = req.params;
-    
+
+
    let deleteList= await Listing.findByIdAndDelete(id);
    console.log(deleteList);
    

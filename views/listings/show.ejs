@@ -21,8 +21,11 @@
     </p>
 
   </div>
-   <div class="fot">
 
+  <%#  if(currUser && currUser._id.equals(listing.owner._id)) { %>
+        
+         <div class="fot">
+     
         <div class="right">
     <a href="/listings/<%=listing._id%>/edit" class="btn btn-dark addd-btn">Edit</a>
    
@@ -35,6 +38,8 @@
     </div>
 
     </div>
+<%#  } %>
+  
 </div>
 
 </div>
