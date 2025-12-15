@@ -85,7 +85,14 @@ router.post("/",isLoggedIn,wrapAsync(async(req,res,next)=>{
 
 router.get("/:id",wrapAsync(async(req,res,next)=>{
     let {id} = req.params;
-  const listing =   await Listing.findById(id).populate("reviews").populate("owner")
+   // Fetch listing with populated reviews and authors, also populate the owner
+    const listing = await Listing.findById(id)
+        .populate({
+            path: "reviews",
+            populate: { path: "author" } // populate the author inside reviews
+        })
+        .populate("owner");
+
   if(!listing){
       req.flash("error","Cureently not exits");
      return res.redirect("/listings")

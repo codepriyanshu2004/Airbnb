@@ -4,7 +4,7 @@ const wrapAsync = require("../utils/wrapAsync.js");
 const ExpressError = require("../utils/ExpressError.js");
 const Listing = require("../models/listing.js")
 const Reviews = require("../models/review.js");
-const { isLoggedIn } = require("../middlware.js");
+const { isLoggedIn, isReviewAuthor } = require("../middlware.js");
 
 
 
@@ -44,7 +44,7 @@ router.post("/",isLoggedIn,  wrapAsync(async(req,res)=>{
 
 );
 
-router.delete("/:reviewId", wrapAsync(async (req, res) => {
+router.delete("/:reviewId", isLoggedIn,isReviewAuthor, wrapAsync(async (req, res) => {
     let { id, reviewId } = req.params;
 
     // Remove review reference from listing model
