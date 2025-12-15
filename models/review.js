@@ -1,6 +1,7 @@
 
 const { default: mongoose } = require("mongoose")
-const moongose = require("mongoose")
+const moongose = require("mongoose");
+const {Schema} = require("mongoose");
 
 const reviewSchema = mongoose.Schema({
     comment: String,
@@ -15,6 +16,11 @@ const reviewSchema = mongoose.Schema({
         type: Date,
         default: Date.now(),
     },
+
+    author:{
+        type: Schema.Types.ObjectId,
+        ref:"User"
+    }
 })
 
 const Review = mongoose.model("Review",reviewSchema);

@@ -3,14 +3,15 @@ const router = express.Router({mergeParams:true});
 const wrapAsync = require("../utils/wrapAsync.js");
 const ExpressError = require("../utils/ExpressError.js");
 const Listing = require("../models/listing.js")
-const Reviews = require("../models/review.js")
+const Reviews = require("../models/review.js");
+const { isLoggedIn } = require("../middlware.js");
 
 
 
 
 
 
-router.post("/",wrapAsync(async(req,res)=>{
+router.post("/",isLoggedIn,  wrapAsync(async(req,res)=>{
  
     let listing = await Listing.findById(req.params.id);
 
@@ -19,6 +20,7 @@ router.post("/",wrapAsync(async(req,res)=>{
     }
 
     let newReview = new Reviews(req.body.review);
+     newReview.author = req.user._id;
 
     if (!newReview.rating) {
         
