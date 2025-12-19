@@ -5,56 +5,16 @@ const ExpressError = require("../utils/ExpressError.js");
 const Listing = require("../models/listing.js")
 const Reviews = require("../models/review.js");
 const { isLoggedIn, isReviewAuthor } = require("../middlware.js");
+const { createReview, deleteReview } = require("../controllers/review.js");
 
 
 
 
 
 
-router.post("/",isLoggedIn,  wrapAsync(async(req,res)=>{
- 
-    let listing = await Listing.findById(req.params.id);
+router.post("/",isLoggedIn,  wrapAsync(createReview));
 
-      if(!req.body.review){
-        throw new ExpressError(400,"send valid data for review");
-    }
-
-    let newReview = new Reviews(req.body.review);
-     newReview.author = req.user._id;
-
-    if (!newReview.rating) {
-        
-          throw new ExpressError(400,"send valid data for rating");
-    }
-   
-     if (!newReview.comment) {
-        
-          throw new ExpressError(400,"send valid data for comment");
-    }
-
-
-
-    listing.reviews.push(newReview);
-
-    newReview.save();
-    listing.save();
-    
-    res.redirect(`/listings/${listing._id}`)
-})
-
-);
-
-router.delete("/:reviewId", isLoggedIn,isReviewAuthor, wrapAsync(async (req, res) => {
-    let { id, reviewId } = req.params;
-
-    // Remove review reference from listing model
-    await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
-
-    // Delete the review itself from review model
-    await Reviews.findByIdAndDelete(reviewId);
-
-    res.redirect(`/listings/${id}`);
-}));
+router.delete("/:reviewId", isLoggedIn,isReviewAuthor, wrapAsync(deleteReview));
 
 
 module.exports = router;
